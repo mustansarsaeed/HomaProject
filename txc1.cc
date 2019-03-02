@@ -15,10 +15,13 @@ class Txc10 : public cSimpleModule
 private :
     long numSent = 0;
     long numReceived = 0;
+    cLongHistogram hopCountStats;
+    cOutVector hopCountVector;
 protected:
     TicTocMsg * generateMessage();
     virtual void forwardMessage(TicTocMsg *msg);
     virtual void initialize() override;
+    virtual void finish() override;
     virtual void refreshDisplay() const override;
     virtual void handleMessage(cMessage *msg) override;
 };
@@ -41,6 +44,11 @@ void Txc10::initialize()
     if (getIndex() == 0) {
         WATCH(numSent);
         WATCH(numReceived);
+
+        hopCountStats.setName("hopCountStats");
+        hopCountStats.setRangeAutoUpper(0, 10, 1.5);
+        hopCountVector.setName("HopCount");
+
         TicTocMsg *msg = generateMessage();
         scheduleAt(0.0, msg);
     }
@@ -62,6 +70,10 @@ void Txc10::handleMessage(cMessage *msg)
         EV << "Message " << ttmsg << " arrived after " << hopcount << " hops.\n";
         numReceived++;
         delete ttmsg;
+
+        hopCountVector.record(hopcount);
+        hopCountStats.collect(hopcount);
+
         bubble("ARRIVED, starting new one!");
 
         // Generate another one.
@@ -107,4 +119,20 @@ TicTocMsg *Txc10::generateMessage()
     msg->setSource(src);
     msg->setDestination(dest);
     return msg;
+}
+
+void Txc10::finish()
+{
+    // This function is called by OMNeT++ at the end of the simulation.
+    EV << "Sent:     " << numSent << endl;
+    EV << "Received: " << numReceived << endl;
+    EV << "Hop count, min:    " << hopCountStats.getMin() << endl;
+    EV << "Hop count, max:    " << hopCountStats.getMax() << endl;
+    EV << "Hop count, mean:   " << hopCountStats.getMean() << endl;
+    EV << "Hop count, stddev: " << hopCountStats.getStddev() << endl;
+
+    recordScalar("#sent", numSent);
+    recordScalar("#received", numReceived);
+
+    hopCountStats.recordAs("hop count");
 }
