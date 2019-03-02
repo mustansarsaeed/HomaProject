@@ -15,12 +15,16 @@ class Tic : public cSimpleModule
   private:
     simtime_t timeout;
     cMessage *timeoutEvent;
+    int seq;  // message sequence number
+    cMessage *message;
 
   public:
     Tic();
     virtual ~Tic();
 
   protected:
+    virtual cMessage *generateNewMessage();
+    virtual void sendCopyOf(cMessage *msg);
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
 };
@@ -41,31 +45,40 @@ Tic::~Tic()
 void Tic::initialize()
 {
     timeout = 1.0;
+    seq = 0;
     timeoutEvent = new cMessage("timeoutEvent");
     EV << "Sending initial messages\n";
     cMessage *cmsg = new cMessage ("TicTocMessage");
     send(cmsg, "out");
     scheduleAt(simTime()+timeout, timeoutEvent);
 }
-
 void Tic::handleMessage(cMessage *msg)
 {
     if(msg == timeoutEvent) {
         EV << "Timeout expired, resending message and restarting timer\n";
-        cMessage *newMsg = new cMessage("Resending new message");
-        send(newMsg, "out");
+        sendCopyOf(message);
         scheduleAt(simTime()+timeout, timeoutEvent);
     } else {
-        EV << "Timer cancelled.\n";
-       cancelEvent(timeoutEvent);
+        EV << "Received: " << msg->getName() << "\n";
        delete msg;
 
-       // Ready to send another one.
-      cMessage *newMsg = new cMessage("Sending new tictocMsg");
-      send(newMsg, "out");
+       EV << "Timer cancelled.\n";
+      cancelEvent(timeoutEvent);
+      delete message;
+
+      // Ready to send another one.
+      message = generateNewMessage();
+      sendCopyOf(message);
       scheduleAt(simTime()+timeout, timeoutEvent);
     }
 }
+
+void Tic::sendCopyOf(cMessage *msg)
+{
+    cMessage *copy = (cMessage *)msg->dup();
+    send(copy, "out");
+}
+
 
 class Toc : public cSimpleModule
 {
@@ -85,6 +98,18 @@ void Toc::handleMessage(cMessage *msg)
     }
     else {
         EV << "Sending back same message as acknowledgement.\n";
-        send(msg, "out");
+        send(new cMessage("ack"), "out");
     }
+}
+
+
+
+
+cMessage *Tic::generateNewMessage()
+{
+    // Generate a message with a different name every time.
+    char msgname[20];
+    sprintf(msgname, "tic-%d", ++seq);
+    cMessage *msg = new cMessage(msgname);
+    return msg;
 }
