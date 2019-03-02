@@ -12,38 +12,37 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
-
-simple TxcBase
-{
-	parameters:
-		bool sendMsgOnInit = default(false);
-	    int limit = default(5);
-	    @display("i=block/routing");
-	gates:
-		input in;
-		output out;
-}
-
-
-simple Tic extends TxcBase
-{
-    parameters:
-        @display("i=,cyan"); // add a default icon
-        sendMsgOnInit = true; // whether the module should send out a message on initialization
-}
-
-simple Tac extends TxcBase
-{
-    parameters:
-        @display("i=,gold"); // add a default icon
-        sendMsgOnInit = true; // whether the module should send out a message on initialization
-}
-
-network TicTac2 {
-    submodules: 
-        tic: Tic;
-        tac: Tac;
-    connections:
-        tic.out --> { delay = 100ms; } --> tac.in;
-        tic.in <-- { delay = 100ms; } <-- tac.out;
-}
+simple Tic
+	{
+	    parameters:
+	        @display("i=block/routing");
+	    gates:
+	        input in;
+	        output out;
+	}
+	
+	simple Toc
+	{
+	    parameters:
+	        @display("i=block/process");
+	    gates:
+	        input in;
+	        output out;
+	}
+	
+	network Tictoc
+	{
+	    submodules:
+	        tic: Tic {
+	            parameters:
+	                @display("i=,cyan");
+	        }
+	        toc: Toc {
+	            parameters:
+	                @display("i=,gold");
+	        }
+	    connections:
+	        tic.out --> {  delay = 100ms; } --> toc.in;
+	        tic.in <-- {  delay = 100ms; } <-- toc.out;
+	}
+	
