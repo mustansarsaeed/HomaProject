@@ -10,106 +10,57 @@
 
 using namespace omnetpp;
 
-class Tic : public cSimpleModule
+class Txc10 : public cSimpleModule
 {
-  private:
-    simtime_t timeout;
-    cMessage *timeoutEvent;
-    int seq;  // message sequence number
-    cMessage *message;
-
-  public:
-    Tic();
-    virtual ~Tic();
-
   protected:
-    virtual cMessage *generateNewMessage();
-    virtual void sendCopyOf(cMessage *msg);
+    virtual void forwardMessage(cMessage *msg);
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
 };
 
-Define_Module(Tic);
+Define_Module(Txc10);
+//
+//Txc10::Txc10()
+//{
+////    timeoutEvent = nullptr;
+//}
+//
+//Txc10::~Txc10()
+//{
+//    // Dispose of dynamically allocated the objects
+////    cancelAndDelete(timeoutEvent);
+//}
 
-Tic::Tic()
+void Txc10::initialize()
 {
-    timeoutEvent = nullptr;
-}
-
-Tic::~Tic()
-{
-    // Dispose of dynamically allocated the objects
-    cancelAndDelete(timeoutEvent);
-}
-
-void Tic::initialize()
-{
-    timeout = 1.0;
-    seq = 0;
-    timeoutEvent = new cMessage("timeoutEvent");
-    EV << "Sending initial messages\n";
-    cMessage *cmsg = new cMessage ("TicTocMessage");
-    send(cmsg, "out");
-    scheduleAt(simTime()+timeout, timeoutEvent);
-}
-void Tic::handleMessage(cMessage *msg)
-{
-    if(msg == timeoutEvent) {
-        EV << "Timeout expired, resending message and restarting timer\n";
-        sendCopyOf(message);
-        scheduleAt(simTime()+timeout, timeoutEvent);
-    } else {
-        EV << "Received: " << msg->getName() << "\n";
-       delete msg;
-
-       EV << "Timer cancelled.\n";
-      cancelEvent(timeoutEvent);
-      delete message;
-
-      // Ready to send another one.
-      message = generateNewMessage();
-      sendCopyOf(message);
-      scheduleAt(simTime()+timeout, timeoutEvent);
+    if (getIndex() == 0) {
+        // Boot the process scheduling the initial message as a self-message.
+        char msgname[20];
+        sprintf(msgname, "tic-%d", getIndex());
+        cMessage *msg = new cMessage(msgname);
+        scheduleAt(0.0, msg);
     }
 }
-
-void Tic::sendCopyOf(cMessage *msg)
-{
-    cMessage *copy = (cMessage *)msg->dup();
-    send(copy, "out");
+void Txc10::handleMessage(cMessage *msg)
+    {
+        if (getIndex() == 3) {
+            // Message arrived.
+            EV << "Message " << msg << " arrived.\n";
+            delete msg;
+        }
+        else {
+            // We need to forward the message.
+            forwardMessage(msg);
+        }
 }
 
+void Txc10::forwardMessage(cMessage *msg)
+    {
+        // In this example, we just pick a random gate to send it on.
+        // We draw a random number between 0 and the size of gate `out[]'.
+        int n = gateSize("out");
+        int k = intuniform(0, n-1);
 
-class Toc : public cSimpleModule
-{
-  protected:
-    virtual void handleMessage(cMessage *msg) override;
-};
-
-Define_Module(Toc);
-
-void Toc::handleMessage(cMessage *msg)
-{
-    EV << "uniform(0, 1) = " << uniform(0, 1) ;
-    if (uniform(0, 1) < 0.5) {
-        EV << "\"Losing\" message.\n";
-        bubble("message lost");  // making animation more informative...
-        delete msg;
+        EV << "Forwarding message " << msg << " on port out[" << k << "]\n";
+        send(msg, "out", k);
     }
-    else {
-        EV << "Sending back same message as acknowledgement.\n";
-        send(new cMessage("ack"), "out");
-    }
-}
-
-
-
-
-cMessage *Tic::generateNewMessage()
-{
-    // Generate a message with a different name every time.
-    char msgname[20];
-    sprintf(msgname, "tic-%d", ++seq);
-    cMessage *msg = new cMessage(msgname);
-    return msg;
-}
