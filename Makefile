@@ -30,10 +30,11 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/txc1.o
+OBJS = $O/txc1.o $O/tictactoe_m.o
 
 # Message files
-MSGFILES =
+MSGFILES = \
+    tictactoe.msg
 
 # SM files
 SMFILES =
