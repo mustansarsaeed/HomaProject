@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scave:Analysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:scave="http://www.omnetpp.org/omnetpp/scave">
+  <inputs>
+    <inputs name="/tictac/results/General-*.vec"/>
+    <inputs name="/tictac/results/General-*.sca"/>
+  </inputs>
+  <datasets>
+    <datasets name="HopCount Tictoc10.tic[0]">
+      <items xsi:type="scave:Add" filterPattern="module(Tictoc10.tic[0]) AND name(HopCount)" type="VECTOR"/>
+      <items xsi:type="scave:LineChart" name="HopCount Tictoc10.tic[0]"/>
+      <items xsi:type="scave:HistogramChart" name="hop count">
+        <properties name="Graph.Title" value="graph title"/>
+        <properties name="X.Axis.Title" value="x title"/>
+        <properties name="Y.Axis.Title" value="y title"/>
+        <properties name="Y.Axis.Min" value="0.0"/>
+        <properties name="Y.Axis.Max" value="1000.0"/>
+      </items>
+    </datasets>
+    <datasets name="HopCountsWithSignals">
+      <items xsi:type="scave:Add" filterPattern="module(Tictoc10.tic[1]) AND name(hopCount:vector)" type="VECTOR"/>
+      <items xsi:type="scave:Group" name="hopCount:vector Tictoc10.tic[1]">
+        <items xsi:type="scave:Apply" operation="winavg">
+          <params name="windowSize" value="10"/>
+        </items>
+        <items xsi:type="scave:Apply" operation="timeavg"/>
+        <items xsi:type="scave:Apply" operation="movingavg">
+          <params name="alpha" value="0.1"/>
+        </items>
+        <items xsi:type="scave:Apply" operation="removerepeats"/>
+        <items xsi:type="scave:Apply" operation="divtime"/>
+        <items xsi:type="scave:Compute" operation="winavg">
+          <params name="windowSize" value="10"/>
+        </items>
+        <items xsi:type="scave:Compute" operation="slidingwinavg">
+          <params name="windowSize" value="10"/>
+        </items>
+        <items xsi:type="scave:Apply" operation="winavg">
+          <params name="windowSize" value="10"/>
+        </items>
+        <items xsi:type="scave:Apply" operation="timeavg"/>
+        <items xsi:type="scave:Compute" operation="sum"/>
+        <items xsi:type="scave:Apply" operation="diffquot"/>
+        <items xsi:type="scave:LineChart" name="hopCount:vector Tictoc10.tic[1]"/>
+      </items>
+      <items xsi:type="scave:BarChart" name="WithSignalBarChart">
+        <properties name="Graph.Title" value="Hop count with signals"/>
+        <properties name="X.Axis.Title" value="x - time"/>
+        <properties name="Y.Axis.Title" value="y - hop count"/>
+        <properties name="Y.Axis.Min" value="0.0"/>
+        <properties name="Y.Axis.Max" value="3000.0"/>
+      </items>
+    </datasets>
+    <datasets name="NewHopCountSignals" basedOn="//@datasets/@datasets.1"/>
+  </datasets>
+  <chartSheets>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.2 //@datasets/@datasets.1/@items.2"/>
+  </chartSheets>
+</scave:Analysis>
