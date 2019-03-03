@@ -2,6 +2,8 @@ simple Txc10
 {
     parameters:
         @display("i=block/routing");
+        @signal[arrival](type="long");
+	    @statistic[hopCount](title="hop count"; source="arrival"; record=vector,stats; interpolationmode=none);
     gates:
         inout gate[];  // declare in[] and out[] to be vector gates
 }
