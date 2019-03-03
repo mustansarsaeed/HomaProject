@@ -20,7 +20,6 @@ protected:
     TicTocMsg * generateMessage();
     virtual void forwardMessage(TicTocMsg *msg);
     virtual void initialize() override;
-    virtual void finish() override;
     virtual void refreshDisplay() const override;
     virtual void handleMessage(cMessage *msg) override;
 };
@@ -40,11 +39,10 @@ Define_Module(Txc10);
 
 void Txc10::initialize()
 {
+    arrivalSignal = registerSignal("arrival");
     if (getIndex() == 0) {
         WATCH(numSent);
         WATCH(numReceived);
-
-        arrivalSignal = registerSignal("arrival");
 
         TicTocMsg *msg = generateMessage();
         scheduleAt(0.0, msg);
@@ -115,10 +113,4 @@ TicTocMsg *Txc10::generateMessage()
     msg->setSource(src);
     msg->setDestination(dest);
     return msg;
-}
-
-void Txc10::finish()
-{
-    // This function is called by OMNeT++ at the end of the simulation.
-
 }
