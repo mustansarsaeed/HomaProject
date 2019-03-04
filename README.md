@@ -11,3 +11,9 @@ This repository provides the progress of HomaSimulation project. There are diffe
 	- It collects the stats of hops count by emitting signals. 
 	- It shows the stats of different operations using Vector and Scalar values
 	- It does the experimentation with Line, Bar, Dotted Line etc graphs with Data sets created using Vectors
+	
+	**Mean Hop Count**
+	- ![Mean Hop Count](/MeanHopcount.png)
+	
+	**Dotted Line Plots for 100 intermediate nodes based on Vector values**
+	- ![Dotted Line Plots for 100 intermediate nodes based on Vector values](/LinePlot-Hopcount.png)
